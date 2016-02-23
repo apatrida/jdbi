@@ -51,7 +51,7 @@ class SqlObject
     }
 
     @SuppressWarnings("unchecked")
-    static <T> T buildSqlObject(final Class<T> sqlObjectType, final HandleDing handle)
+    static <T> T buildSqlObject(final Class<T> sqlObjectType, final HandleDing handle, final FallbackBinderFactory fallbackBinderFactory)
     {
         Factory f;
         if (factories.containsKey(sqlObjectType)) {
@@ -70,7 +70,7 @@ class SqlObject
                 e.setSuperclass(sqlObjectType);
             }
             e.setInterfaces(interfaces.toArray(new Class[interfaces.size()]));
-            final SqlObject so = new SqlObject(buildHandlersFor(sqlObjectType), handle);
+            final SqlObject so = new SqlObject(buildHandlersFor(sqlObjectType, fallbackBinderFactory), handle);
             e.setCallbackFilter(m -> m.isDefault() ? 1 : 0);
             e.setCallbacks(new Callback[] {
                 (MethodInterceptor) so::invoke,
@@ -86,14 +86,14 @@ class SqlObject
         }
 
         // TODO 3: this is duplicated from the above setCallbacks, can we clean that up?
-        final SqlObject so = new SqlObject(buildHandlersFor(sqlObjectType), handle);
+        final SqlObject so = new SqlObject(buildHandlersFor(sqlObjectType, fallbackBinderFactory), handle);
         return (T) f.newInstance(new Callback[] {
             (MethodInterceptor) so::invoke,
             NoOp.INSTANCE
         });
     }
 
-    private static Map<Method, Handler> buildHandlersFor(Class<?> sqlObjectType)
+    private static Map<Method, Handler> buildHandlersFor(Class<?> sqlObjectType, final FallbackBinderFactory fallbackBinderFactory)
     {
         if (handlersCache.containsKey(sqlObjectType)) {
             return handlersCache.get(sqlObjectType);
@@ -109,19 +109,19 @@ class SqlObject
             final Method raw_method = method.getRawMember();
 
             if (raw_method.isAnnotationPresent(SqlQuery.class)) {
-                handlers.put(raw_method, new QueryHandler(sqlObjectType, method, ResultReturnThing.forType(method)));
+                handlers.put(raw_method, new QueryHandler(sqlObjectType, method, ResultReturnThing.forType(method), fallbackBinderFactory));
             }
             else if (raw_method.isAnnotationPresent(SqlUpdate.class)) {
-                handlers.put(raw_method, new UpdateHandler(sqlObjectType, method));
+                handlers.put(raw_method, new UpdateHandler(sqlObjectType, method, fallbackBinderFactory));
             }
             else if (raw_method.isAnnotationPresent(SqlBatch.class)) {
-                handlers.put(raw_method, new BatchHandler(sqlObjectType, method));
+                handlers.put(raw_method, new BatchHandler(sqlObjectType, method, fallbackBinderFactory));
             }
             else if (raw_method.isAnnotationPresent(SqlCall.class)) {
-                handlers.put(raw_method, new CallHandler(sqlObjectType, method));
+                handlers.put(raw_method, new CallHandler(sqlObjectType, method, fallbackBinderFactory));
             }
             else if(raw_method.isAnnotationPresent(CreateSqlObject.class)) {
-                handlers.put(raw_method, new CreateSqlObjectHandler(raw_method.getReturnType()));
+                handlers.put(raw_method, new CreateSqlObjectHandler(raw_method.getReturnType(), fallbackBinderFactory));
             }
             else if (raw_method.isAnnotationPresent(Transaction.class)) {
                 handlers.put(raw_method, new PassThroughTransactionHandler(raw_method, raw_method.getAnnotation(Transaction.class)));

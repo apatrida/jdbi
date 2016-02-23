@@ -35,7 +35,7 @@ abstract class CustomizingStatementHandler implements Handler
     private final Method method;
 
     @SuppressWarnings("unchecked")
-    CustomizingStatementHandler(Class<?> sqlObjectType, ResolvedMethod method)
+    CustomizingStatementHandler(Class<?> sqlObjectType, ResolvedMethod method, FallbackBinderFactory fallbackBinderFactory)
     {
         this.sqlObjectType = sqlObjectType;
         this.method = method.getRawMember();
@@ -112,7 +112,7 @@ abstract class CustomizingStatementHandler implements Handler
             if (!thereBindingAnnotation) {
                 // If there is no binding annotation on a parameter,
                 // then add a default parameter binder
-                binders.add(new Bindifier<>(method.getRawMember(), null, param_idx, new DefaultObjectBinder(param_idx)));
+                binders.add(new Bindifier<>(method.getRawMember(), null, param_idx, fallbackBinderFactory.fallbackFor(method.getRawMember(), param_idx)));
             }
         }
     }

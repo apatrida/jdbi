@@ -291,7 +291,7 @@ public class DBI
     }
 
     /**
-     * Define an attribute on every {@link StatementContext} for every statement created
+     * Define an attribute on every {@link  StatementContext} for every statement created
      * from a handle obtained from this DBI instance.
      *
      * @param key   The key for the attribute

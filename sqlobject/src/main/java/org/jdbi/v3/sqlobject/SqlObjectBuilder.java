@@ -33,7 +33,12 @@ public class SqlObjectBuilder
      */
     public static <T> T attach(Handle handle, Class<T> sqlObjectType)
     {
-        return SqlObject.buildSqlObject(sqlObjectType, new ConstantHandleDing(handle));
+        return SqlObject.buildSqlObject(sqlObjectType, new ConstantHandleDing(handle), new DefaultFallbackBinderFactory());
+    }
+
+    public static <T> T attach(Handle handle, Class<T> sqlObjectType, FallbackBinderFactory fallbackBinderFactory)
+    {
+        return SqlObject.buildSqlObject(sqlObjectType, new ConstantHandleDing(handle), fallbackBinderFactory);
     }
 
     /**
@@ -47,7 +52,12 @@ public class SqlObjectBuilder
      */
     public static <T> T open(DBI dbi, Class<T> sqlObjectType)
     {
-        return SqlObject.buildSqlObject(sqlObjectType, new ConstantHandleDing(dbi.open()));
+        return SqlObject.buildSqlObject(sqlObjectType, new ConstantHandleDing(dbi.open()), new DefaultFallbackBinderFactory());
+    }
+
+    public static <T> T open(DBI dbi, Class<T> sqlObjectType, FallbackBinderFactory fallbackBinderFactory)
+    {
+        return SqlObject.buildSqlObject(sqlObjectType, new ConstantHandleDing(dbi.open()), fallbackBinderFactory);
     }
 
     /**
@@ -61,7 +71,12 @@ public class SqlObjectBuilder
      */
     public static <T> T onDemand(final DBI dbi, final Class<T> sqlObjectType)
     {
-        return SqlObject.buildSqlObject(sqlObjectType, new OnDemandHandleDing(dbi));
+        return SqlObject.buildSqlObject(sqlObjectType, new OnDemandHandleDing(dbi), new DefaultFallbackBinderFactory());
+    }
+
+    public static <T> T onDemand(final DBI dbi, final Class<T> sqlObjectType, FallbackBinderFactory fallbackBinderFactory)
+    {
+        return SqlObject.buildSqlObject(sqlObjectType, new OnDemandHandleDing(dbi), fallbackBinderFactory);
     }
 
     /**

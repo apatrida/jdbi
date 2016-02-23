@@ -18,15 +18,17 @@ import net.sf.cglib.proxy.MethodProxy;
 class CreateSqlObjectHandler implements Handler
 {
     private final Class<?> sqlObjectTypeToCreate;
+    private final FallbackBinderFactory fallbackBinderFactory;
 
-    CreateSqlObjectHandler(Class<?> sqlObjectTypeToCreate)
+    CreateSqlObjectHandler(Class<?> sqlObjectTypeToCreate, final FallbackBinderFactory fallbackBinderFactory)
     {
         this.sqlObjectTypeToCreate = sqlObjectTypeToCreate;
+        this.fallbackBinderFactory = fallbackBinderFactory;
     }
 
     @Override
     public Object invoke(HandleDing h, Object target, Object[] args, MethodProxy mp)
     {
-        return SqlObject.buildSqlObject(sqlObjectTypeToCreate, h);
+        return SqlObject.buildSqlObject(sqlObjectTypeToCreate, h, fallbackBinderFactory);
     }
 }

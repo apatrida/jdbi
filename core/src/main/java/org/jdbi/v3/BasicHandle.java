@@ -52,7 +52,6 @@ class BasicHandle implements Handle
     private final TransactionHandler       transactions;
     private final Connection               connection;
 
-
     BasicHandle(TransactionHandler transactions,
                 StatementLocator statementLocator,
                 StatementBuilder preparedStatementCache,
