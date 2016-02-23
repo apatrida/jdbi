@@ -42,7 +42,7 @@ class PluginTest {
         val brian = Thing(1, "Brian")
         val keith = Thing(2, "Keith")
 
-        val dao: ThingDao = attachSqlObject(db.sharedHandle)
+        val dao = attachSqlObject<ThingDao>(db.sharedHandle)
         dao.insert(brian)
         dao.insert(keith)
 
