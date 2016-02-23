@@ -48,9 +48,12 @@ class PluginTest {
 
         val rs = dao.list()
 
-        assertEquals(rs.size.toLong(), 2)
-        assertEquals(rs[0], brian)
-        assertEquals(rs[1], keith)
+        assertEquals(2, rs.size.toLong())
+        assertEquals(brian, rs[0])
+        assertEquals(keith, rs[1])
+
+        val foundThing = dao.findById(2)
+        assertEquals(keith, foundThing)
     }
 }
 
