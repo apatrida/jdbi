@@ -24,7 +24,11 @@ class PluginTest {
     @Rule @JvmField
     val db = H2DatabaseRule().withPlugins()
 
-    data class Thing(val id: Int, val name: String)
+    data class Thing(val id: Int, val name: String,
+                     val nullable: String?,
+                     val nullableDefaultedNull: String? = null,
+                     val nullableDefaultedNotNull: String? = "not null",
+                     val defaulted: String = "default value")
 
     private interface ThingDao {
         @SqlUpdate("insert into something (id, name) values (:something.id, :something.name)")
@@ -33,13 +37,16 @@ class PluginTest {
         @SqlQuery("select id, name from something")
         fun list(): List<Thing>
 
+        @SqlQuery("select id, name, null as nullable, null as nullableDefaultedNull, null as nullableDefaultedNotNull, 'test' as defaulted from something")
+        fun listWithNulls(): List<Thing>
+
         @SqlQuery("select id, name from something where id=:id")
         fun findById(id: Int): Thing
     }
 
     private fun commonTest(dao: ThingDao) {
-        val brian = Thing(1, "Brian")
-        val keith = Thing(2, "Keith")
+        val brian = Thing(1, "Brian", null)
+        val keith = Thing(2, "Keith", null)
 
         dao.insert(brian)
         dao.insert(keith)
@@ -52,6 +59,11 @@ class PluginTest {
 
         val foundThing = dao.findById(2)
         assertEquals(keith, foundThing)
+
+        val rs2 = dao.listWithNulls()
+        assertEquals(2, rs2.size.toLong())
+        assertEquals(brian.copy(nullable = null, nullableDefaultedNull = null, nullableDefaultedNotNull = null, defaulted = "test"), rs2[0])
+        assertEquals(keith.copy(nullable = null, nullableDefaultedNull = null, nullableDefaultedNotNull = null, defaulted = "test"), rs2[1])
     }
 
     @Test

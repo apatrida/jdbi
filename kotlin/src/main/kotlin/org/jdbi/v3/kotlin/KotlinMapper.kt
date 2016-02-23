@@ -60,22 +60,28 @@ class KotlinMapper<C: Any> internal constructor(private val clazz: Class<C>) : R
         val validParametersByName = constructor.parameters.filter { it.kind == KParameter.Kind.VALUE && it.name != null}
                 .map { it.name!!.toLowerCase() to it }.toMap()
 
-        val parms = (rs.metaData.columnCount downTo 1).map { rs.metaData.getColumnLabel(it).toLowerCase() }
+        val matchingParms = (rs.metaData.columnCount downTo 1).map { rs.metaData.getColumnLabel(it).toLowerCase() }
                 .map { validParametersByName.get(it) }
                 .filterNotNull()
                 .map { param ->
                     val paramType = param.type.javaType
                     val columnMapper = ctx.findColumnMapperFor(paramType).orElseThrow { NoSuchColumnMapperException("No column mapper for " + paramType) }
                     Pair(param, columnMapper.mapColumn(rs, param.name, ctx))
-                }.toMap()
+                }
 
-        val nullablesThatAreAbsent = constructor.parameters.filter { it.type.isMarkedNullable && !parms.containsKey(it) }.map {
+        val parmsThatArePresent = matchingParms.map { it.first }.toSet()
+
+        // things missing from the result set that are Nullable and not optional should be set to Null
+        val nullablesThatAreAbsent = constructor.parameters.filter { !it.isOptional && it.type.isMarkedNullable && it !in parmsThatArePresent }.map {
             Pair(it, null)
-        }.toMap()
+        }
 
-        val defaultableThatAreNull = constructor.parameters.filter { it.isOptional && !it.type.isMarkedNullable && !parms.containsKey(it) }.toSet()
+        // things that are missing from the result set but are defaultable
+        val defaultableThatAreAbsent = constructor.parameters.filter { it.isOptional && !it.type.isMarkedNullable && it !in parmsThatArePresent }.toSet()
 
-        val finalParms = (parms.entries + nullablesThatAreAbsent.entries).filterNot { it.key in defaultableThatAreNull }.map { it.key to it.value }.toMap()
+        val finalParms = (matchingParms + nullablesThatAreAbsent)
+                               .filterNot { it.first in defaultableThatAreAbsent }
+                               .toMap()
         return constructor.callBy(finalParms)
     }
 
