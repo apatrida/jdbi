@@ -13,6 +13,7 @@
  */
 package org.jdbi.v3.kotlin
 
+import org.jdbi.v3.DBI
 import org.jdbi.v3.Handle
 import org.jdbi.v3.sqlobject.Bind
 import org.jdbi.v3.sqlobject.FallbackBinderFactory
@@ -25,6 +26,30 @@ fun <T: Any> attachSqlObject(handle: Handle, sqlObjectType: KClass<T>, fallbackB
 
 inline fun <reified T: Any> attachSqlObject(handle: Handle, fallbackBinderFactory: FallbackBinderFactory<Bind> = KotlinBinderFactory()): T {
     return attachSqlObject(handle, T::class, fallbackBinderFactory)
+}
+
+fun <T: Any> DBI.open(sqlObjectType: KClass<T>, fallbackBinderFactory: FallbackBinderFactory<Bind> = KotlinBinderFactory()): T {
+    return SqlObjectBuilder.open(this, sqlObjectType.java, fallbackBinderFactory)
+}
+
+inline fun <reified T: Any> DBI.open(fallbackBinderFactory: FallbackBinderFactory<Bind> = KotlinBinderFactory()): T {
+    return this.open(T::class, fallbackBinderFactory)
+}
+
+fun <T: Any> DBI.onDemand(sqlObjectType: KClass<T>, fallbackBinderFactory: FallbackBinderFactory<Bind> = KotlinBinderFactory()): T {
+    return SqlObjectBuilder.onDemand(this, sqlObjectType.java, fallbackBinderFactory)
+}
+
+inline fun <reified T: Any> DBI.onDemand(fallbackBinderFactory: FallbackBinderFactory<Bind> = KotlinBinderFactory()): T {
+    return this.onDemand(T::class, fallbackBinderFactory)
+}
+
+fun <T: Any> Handle.attach(sqlObjectType: KClass<T>, fallbackBinderFactory: FallbackBinderFactory<Bind> = KotlinBinderFactory()): T {
+    return SqlObjectBuilder.attach(this, sqlObjectType.java, fallbackBinderFactory)
+}
+
+inline fun <reified T: Any> Handle.attach(fallbackBinderFactory: FallbackBinderFactory<Bind> = KotlinBinderFactory()): T {
+    return this.attach(T::class, fallbackBinderFactory)
 }
 
 private val metadataFqName = "kotlin.Metadata"

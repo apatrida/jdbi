@@ -26,7 +26,7 @@ class PluginTest {
 
     data class Thing(val id: Int, val name: String)
 
-    internal interface ThingDao {
+    private interface ThingDao {
         @SqlUpdate("insert into something (id, name) values (:something.id, :something.name)")
         fun insert(something: Thing)
 
@@ -37,12 +37,10 @@ class PluginTest {
         fun findById(id: Int): Thing
     }
 
-    @Test
-    fun testPluginInstallsJpaMapper() {
+    private fun commonTest(dao: ThingDao) {
         val brian = Thing(1, "Brian")
         val keith = Thing(2, "Keith")
 
-        val dao = attachSqlObject<ThingDao>(db.sharedHandle)
         dao.insert(brian)
         dao.insert(keith)
 
@@ -54,6 +52,26 @@ class PluginTest {
 
         val foundThing = dao.findById(2)
         assertEquals(keith, foundThing)
+    }
+
+    @Test
+    fun testPluginInstallsJpaMapper() {
+        commonTest(attachSqlObject<ThingDao>(db.sharedHandle))
+    }
+
+    @Test
+    fun testDaoCanAttachViaDbiOpen() {
+        commonTest(db.dbi.open<ThingDao>())
+    }
+
+    @Test
+    fun testDaoCanAttachViaDbiOnDemand() {
+        commonTest(db.dbi.onDemand<ThingDao>())
+    }
+
+    @Test
+    fun testDaoCanAttachViaHandleAttach() {
+        commonTest(db.sharedHandle.attach<ThingDao>())
     }
 }
 
